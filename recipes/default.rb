@@ -23,7 +23,7 @@ include_recipe "git"
 include_recipe "ubuntu"
 include_recipe "ruby_installer"
 include_recipe "postgresql::server"
-include_recipe "postgresql::client"
+include_recipe "database::postgresql"
 include_recipe "redis::server"
 
 directory node['metarepo']['directory'] do
@@ -48,6 +48,34 @@ execute "metarepo: bundle" do
   user node['metarepo']['user']
   group node['metarepo']['group']
   creates File.join(node['metarepo']['directory'], ".bundle")
+end
+
+postgresql_connection_info = {:host => "127.0.0.1", :port => 5432, :username => 'postgres', :password => node['postgresql']['password']['postgres']}
+
+postgresql_database node['metarepo']['database']['name'] do
+  connection postgresql_connection_info
+  action :create
+end
+
+postgresql_database node['metarepo']['database']['name'] do
+  connection postgresql_connection_info
+  template 'DEFAULT'
+  encoding 'DEFAULT'
+  tablespace 'DEFAULT'
+  connection_limit '-1'
+  owner 'postgres'
+  action :create
+end
+
+Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
+node.default['metarepo']['database']['password'] = secure_password
+
+postgresql_database_user node['metarepo']['database']['user'] do
+  password node['metarepo']['database']['password']
+  database_name node['metarepo']['database']['name']
+  host node['metarepo']['database']['host']
+  privileges node['metarepo']['database']['privileges']
+  action :grant
 end
 
 # runit_service "resque"

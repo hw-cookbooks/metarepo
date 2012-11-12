@@ -9,5 +9,8 @@ depends "git"
 depends "ubuntu"
 depends "ruby_installer"
 depends "runit"
+depends "openssl"
+depends "database"
 depends "postgresql"
 depends "redis"
+
