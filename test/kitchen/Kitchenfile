@@ -1,0 +1,3 @@
+cookbook "metarepo" do
+  runtimes []
+end
