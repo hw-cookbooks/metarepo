@@ -22,11 +22,11 @@ node.default['ruby_installer']['package_name'] = "ruby1.9.3"
 include_recipe "git"
 include_recipe "ubuntu"
 include_recipe "ruby_installer"
-include_recipe "postgresql::server"
-include_recipe "database::postgresql"
 include_recipe "redis::server"
 
-directory node['metarepo']['directory'] do
+include_recipe "#{cookbook_name}::user"
+
+directory node['metarepo']['home'] do
   owner node['metarepo']['user']
   group node['metarepo']['group']
 end
@@ -50,33 +50,32 @@ execute "metarepo: bundle" do
   creates File.join(node['metarepo']['directory'], ".bundle")
 end
 
-postgresql_connection_info = {:host => "127.0.0.1", :port => 5432, :username => 'postgres', :password => node['postgresql']['password']['postgres']}
+include_recipe "#{cookbook_name}::database"
 
-postgresql_database node['metarepo']['database']['name'] do
-  connection postgresql_connection_info
-  action :create
+execute "metarepo: database migrations" do
+  command "bundle exec sequel -m ./migrations #{node['metarepo']['database']['db_connect']}"
+  subscribes( :run,
+              "postgresql_database_user[#{node['metarepo']['database']['user']}]",
+              :immediately )
+  cwd node['metarepo']['directory']
+  user node['metarepo']['user']
+  group node['metarepo']['group']
+  action :nothing
 end
 
-postgresql_database node['metarepo']['database']['name'] do
-  connection postgresql_connection_info
-  template 'DEFAULT'
-  encoding 'DEFAULT'
-  tablespace 'DEFAULT'
-  connection_limit '-1'
-  owner 'postgres'
-  action :create
+template node['metarepo']['config_file'] do
+  variables( :db_connect => node['metarepo']['database']['db_connect'],
+             :pool_path => node['metarepo']['pool_path'],
+             :repo_path => node['metarepo']['repo_path'],
+             :upstream_path => node['metarepo']['upstream_path'],
+             :uri => node['metarepo']['uri'],
+             :gpg_key => node['metarepo']['gpg_key']
+             )
+  owner node['metarepo']['user']
+  group node['metarepo']['group']
+  mode 00644
+  notifies :restart, "service[metarepo]"
 end
 
-Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
-node.default['metarepo']['database']['password'] = secure_password
-
-postgresql_database_user node['metarepo']['database']['user'] do
-  password node['metarepo']['database']['password']
-  database_name node['metarepo']['database']['name']
-  host node['metarepo']['database']['host']
-  privileges node['metarepo']['database']['privileges']
-  action :grant
-end
-
-# runit_service "resque"
+runit_service "resque"
 runit_service "metarepo"
