@@ -22,11 +22,11 @@ node.default['ruby_installer']['package_name'] = "ruby1.9.3"
 include_recipe "git"
 include_recipe "ubuntu"
 include_recipe "ruby_installer"
-include_recipe "postgresql::server"
-include_recipe "postgresql::client"
 include_recipe "redis::server"
 
-directory node['metarepo']['directory'] do
+include_recipe "#{cookbook_name}::user"
+
+directory node['metarepo']['home'] do
   owner node['metarepo']['user']
   group node['metarepo']['group']
 end
@@ -50,5 +50,32 @@ execute "metarepo: bundle" do
   creates File.join(node['metarepo']['directory'], ".bundle")
 end
 
-# runit_service "resque"
+include_recipe "#{cookbook_name}::database"
+
+execute "metarepo: database migrations" do
+  command "bundle exec sequel -m ./migrations #{node['metarepo']['database']['db_connect']}"
+  subscribes( :run,
+              "postgresql_database_user[#{node['metarepo']['database']['user']}]",
+              :immediately )
+  cwd node['metarepo']['directory']
+  user node['metarepo']['user']
+  group node['metarepo']['group']
+  action :nothing
+end
+
+template node['metarepo']['config_file'] do
+  variables( :db_connect => node['metarepo']['database']['db_connect'],
+             :pool_path => node['metarepo']['pool_path'],
+             :repo_path => node['metarepo']['repo_path'],
+             :upstream_path => node['metarepo']['upstream_path'],
+             :uri => node['metarepo']['uri'],
+             :gpg_key => node['metarepo']['gpg_key']
+             )
+  owner node['metarepo']['user']
+  group node['metarepo']['group']
+  mode 00644
+  notifies :restart, "service[metarepo]"
+end
+
+runit_service "resque"
 runit_service "metarepo"
