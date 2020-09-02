@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: metarepo
+# Cookbook:: metarepo
 # Recipe:: user
 #
-# Copyright 2012, Heavy Water Operations, LLC
+# Copyright:: 2012, Heavy Water Operations, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,6 @@ user node['metarepo']['user'] do
   uid node['metarepo']['uid']
   gid node['metarepo']['gid']
   home node['metarepo']['home']
-  supports :manage_home => true
+  manage_home true
   system true
 end

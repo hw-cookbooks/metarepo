@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: metarepo
+# Cookbook:: metarepo
 # Recipe:: default
 #
-# Copyright 2012, Heavy Water Operations, LLC
+# Copyright:: 2012, Heavy Water Operations, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,12 +17,12 @@
 # limitations under the License.
 #
 
-node.default['ruby_installer']['package_name'] = "ruby1.9.3"
+node.default['ruby_installer']['package_name'] = 'ruby1.9.3'
 
-include_recipe "git"
-include_recipe "ubuntu"
-include_recipe "ruby_installer"
-include_recipe "redis::server"
+include_recipe 'git'
+include_recipe 'ubuntu'
+include_recipe 'ruby_installer'
+include_recipe 'redis::server'
 
 include_recipe "#{cookbook_name}::user"
 
@@ -39,24 +39,24 @@ git node['metarepo']['directory'] do
   group node['metarepo']['group']
 end
 
-gem_package "bundler"
+gem_package 'bundler'
 
-execute "metarepo: bundle" do
-  command "bundle install --deployment"
-  subscribes :run, resources(:git => node['metarepo']['directory']), :immediately
+execute 'metarepo: bundle' do
+  command 'bundle install --deployment'
+  subscribes :run, "git[#{node['metarepo']['directory']}]", :immediately
   cwd node['metarepo']['directory']
   user node['metarepo']['user']
   group node['metarepo']['group']
-  creates File.join(node['metarepo']['directory'], ".bundle")
+  creates File.join(node['metarepo']['directory'], '.bundle')
 end
 
 include_recipe "#{cookbook_name}::database"
 
-execute "metarepo: database migrations" do
+execute 'metarepo: database migrations' do
   command "bundle exec sequel -m ./migrations #{node['metarepo']['database']['db_connect']}"
-  subscribes( :run,
+  subscribes(:run,
               "postgresql_database_user[#{node['metarepo']['database']['user']}]",
-              :immediately )
+              :immediately)
   cwd node['metarepo']['directory']
   user node['metarepo']['user']
   group node['metarepo']['group']
@@ -64,18 +64,18 @@ execute "metarepo: database migrations" do
 end
 
 template node['metarepo']['config_file'] do
-  variables( :db_connect => node['metarepo']['database']['db_connect'],
-             :pool_path => node['metarepo']['pool_path'],
-             :repo_path => node['metarepo']['repo_path'],
-             :upstream_path => node['metarepo']['upstream_path'],
-             :uri => node['metarepo']['uri'],
-             :gpg_key => node['metarepo']['gpg_key']
-             )
+  variables(db_connect: node['metarepo']['database']['db_connect'],
+             pool_path: node['metarepo']['pool_path'],
+             repo_path: node['metarepo']['repo_path'],
+             upstream_path: node['metarepo']['upstream_path'],
+             uri: node['metarepo']['uri'],
+             gpg_key: node['metarepo']['gpg_key']
+           )
   owner node['metarepo']['user']
   group node['metarepo']['group']
-  mode 00644
-  notifies :restart, "service[metarepo]"
+  mode '644'
+  notifies :restart, 'service[metarepo]'
 end
 
-runit_service "resque"
-runit_service "metarepo"
+runit_service 'resque'
+runit_service 'metarepo'
