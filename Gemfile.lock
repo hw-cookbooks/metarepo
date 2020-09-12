@@ -1,5 +1,5 @@
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
     archive-tar-minitar (0.5.2)
     bunny (0.7.9)
@@ -25,7 +25,7 @@ GEM
       ffi (~> 1.0, >= 1.0.6)
     coderay (1.0.8)
     erubis (2.7.0)
-    ffi (1.1.5)
+    ffi (1.13.1)
     foodcritic (1.6.1)
       erubis
       gherkin (~> 2.11.1)
