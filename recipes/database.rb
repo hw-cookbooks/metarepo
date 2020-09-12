@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: metarepo
+# Cookbook:: metarepo
 # Recipe:: database
 #
-# Copyright 2012, Heavy Water Operations, LLC
+# Copyright:: 2012, Heavy Water Operations, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,15 +17,15 @@
 # limitations under the License.
 #
 
-include_recipe "postgresql::server"
-include_recipe "database::postgresql"
+include_recipe 'postgresql::server'
+include_recipe 'database::postgresql'
 
 # This could be a search
 postgresql_connection_info = {
-  :host => node['metarepo']['database']['hostname'],
-  :port => 5432,
-  :username => 'postgres',
-  :password => node['postgresql']['password']['postgres']
+  host: node['metarepo']['database']['hostname'],
+  port: 5432,
+  username: 'postgres',
+  password: node['postgresql']['password']['postgres'],
 }
 
 postgresql_database node['metarepo']['database']['name'] do
@@ -43,19 +43,19 @@ postgresql_database node['metarepo']['database']['name'] do
   action :create
 end
 
-Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
+Chef::Recipe.include Opscode::OpenSSL::Password
 
-node.set_unless['metarepo']['database']['password'] = secure_password
+node.normal_unless['metarepo']['database']['password'] = secure_password
 node.default['metarepo']['database']['db_connect'] =
   [
-   "postgres://",
+   'postgres://',
    node['metarepo']['database']['user'],
-   ":",
+   ':',
    node['metarepo']['database']['password'],
-   "@",
+   '@',
    node['metarepo']['database']['hostname'],
-   "/",
-   node['metarepo']['database']['name']
+   '/',
+   node['metarepo']['database']['name'],
   ].join
 
 postgresql_database_user node['metarepo']['database']['user'] do
