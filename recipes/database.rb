@@ -43,7 +43,7 @@ postgresql_database node['metarepo']['database']['name'] do
   action :create
 end
 
-Chef::Recipe.include Opscode::OpenSSL::Password
+Chef::DSL::Recipe.include Opscode::OpenSSL::Password
 
 node.normal_unless['metarepo']['database']['password'] = secure_password
 node.default['metarepo']['database']['db_connect'] =
