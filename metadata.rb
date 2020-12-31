@@ -12,4 +12,3 @@ depends 'openssl'
 depends 'database'
 depends 'postgresql'
 depends 'redis'
-
