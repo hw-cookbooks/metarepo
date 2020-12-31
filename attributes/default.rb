@@ -19,4 +19,3 @@ default['metarepo']['database']['password'] = nil
 default['metarepo']['database']['hostname'] = '127.0.0.1'
 default['metarepo']['database']['host'] = '%'
 default['metarepo']['database']['privileges'] = %w(all).map(&:to_sym)
-
